@@ -23,4 +23,18 @@ if grep -qE '\!SSLv2|\!SSLv3|>=TLSv1(\.[0-1])?$' /opt/postfix/conf/main.cf /opt/
     echo "CipherString = DEFAULT@SECLEVEL=0" >> /etc/ssl/openssl.cnf
 fi  
 
+# Set Postfix-specific OpenSSL signature algorithms
+sed -i '/\[openssl_init\]/a postfix = postfix_settings' /etc/ssl/openssl.cnf
+cat >> /etc/ssl/openssl.cnf <<'EOF'
+
+[postfix_settings]
+ssl_conf = postfix_ssl_settings
+
+[postfix_ssl_settings]
+system_default = baseline_postfix_settings
+
+[baseline_postfix_settings]
+SignatureAlgorithms = ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:RSA-PSS+SHA256:RSA-PSS+SHA384:RSA-PSS+SHA512:RSA+SHA512:RSA+SHA256:RSA+SHA384
+EOF
+
 exec "$@"
